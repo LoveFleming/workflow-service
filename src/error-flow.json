@@ -1,0 +1,137 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://example.com/api/data",
+        "method": "GET",
+        "responseFormat": "json"
+      },
+      "id": "2",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "success"
+            }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "Next Step",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "maxTries": 3,
+        "waitTime": 1000
+      },
+      "id": "4",
+      "name": "Retry Request (ERR)",
+      "type": "n8n-nodes-base.retry",
+      "typeVersion": 1,
+      "position": [460, 500]
+    },
+    {
+      "parameters": {
+        "to": "ops@example.com",
+        "subject": "Workflow Failure Alert",
+        "text": "The HTTP Request failed after retries."
+      },
+      "id": "5",
+      "name": "Alert Ops (ERR)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [700, 500],
+      "credentials": {
+        "smtp": {
+          "id": "your-smtp-credential-id",
+          "name": "Your SMTP Credential"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "6",
+      "name": "Stop (ERR)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [920, 500]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Next Step",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Retry Request (ERR)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retry Request (ERR)": {
+      "main": [
+        [
+          {
+            "node": "Alert Ops (ERR)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Ops (ERR)": {
+      "main": [
+        [
+          {
+            "node": "Stop (ERR)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "name": "HTTP with Inline Error Branch",
+  "versionId": "1"
+}
